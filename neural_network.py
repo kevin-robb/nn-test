@@ -28,12 +28,32 @@ class NeuralNetwork:
             inputs = outputs
         return outputs
 
+    def backpropagate_error(self, expected:List[float]):
+        for i in reversed(range(len(self.network))):
+            layer = self.network[i]
+            errors = []
+            # handle error differently for output layer and hidden layer(s)
+            if i == len(self.network) - 1: # output layer
+                for j in range(len(layer)):
+                    errors.append(expected[j] - layer[j].output)
+            else: # hidden layer
+                for j in range(len(layer)):
+                    err = 0.0
+                    for neuron in self.network[i+1]:
+                        err += neuron.weights[j] * neuron.error
+                    errors.append(err)
+            # set the error on all nodes
+            for n in range(len(layer)):
+                layer[n].set_error(errors[n])
+                
+
 class Neuron:
     # each node has n_in+1 (initially random) weights,
     # one for each node in the previous layer + 1 for the bias
     def __init__(self, weights:List[float]):
         self.weights = weights
         self.output = 0
+        self.error = 0
 
     def __str__(self) -> str:
         result = "\nweights: ["
@@ -42,8 +62,8 @@ class Neuron:
             result += txt.format(weight = self.weights[w])
             if w < len(self.weights)-1: result += ","
         result += "], output: " + "{out:.4f}".format(out = self.output)
+        result += ", error: " + "{err:.4f}".format(err = self.error)
         return result
-        #return "\nweights: " + str(self.weights) + "\noutput: " + str(self.output)
 
     def activate(self, inputs:List[float]) -> float:
         activation = self.weights[-1] # the bias
@@ -53,5 +73,12 @@ class Neuron:
         return activation
 
     def transfer(self, inputs:List[float]):
-        # sigmoid/logistic activation function
+        # sigmoid/logistic activation function (used for forward propagation)
         self.output = 1.0 / (1.0 + exp(-self.activate(inputs)))
+
+    def transfer_derivative(self):
+        # derivative of sigmoid (used for backpropagation)
+        return self.output * (1.0 - self.output)
+
+    def set_error(self,err:float):
+        self.error = err * self.transfer_derivative()
