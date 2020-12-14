@@ -2,7 +2,9 @@ from random import random
 from math import exp
 from typing import List
 class NeuralNetwork:
-    def __init__(self,n_in:int,n_hidden:int,n_out:int):
+    def __init__(self,learning_rate:float,n_in:int,n_hidden:int,n_out:int):
+        self.learning_rate = learning_rate
+        self.num_outputs = n_out
         # network is a list of layers
         self.network = []
         # each layer is a list of nodes
@@ -45,6 +47,34 @@ class NeuralNetwork:
             # set the error on all nodes
             for n in range(len(layer)):
                 layer[n].set_error(errors[n])
+    
+    def update_weights(self, row:List[float]):
+        # we use online learning (update after every training example)
+        for i in range(len(self.network)):
+            if i == 0:
+                # first layer. strip the label from inputs
+                inputs = row[0:-1]
+            else:
+                # inputs are the outputs from prev layer
+                inputs = [neuron.output for neuron in self.network[i-1]]
+            # have each node update its weights
+            for neuron in self.network[i]:
+                neuron.update_weights(inputs, self.learning_rate)
+
+    def train(self, training_data:List[List[float]], n_epoch:int):
+        # train the network for n_epoch epochs
+        for epoch in range(n_epoch):
+            sum_error = 0
+            for row in training_data:
+                # get our model's predictions
+                outputs = self.forward_propagate(row)
+                # get the true labels (using one-hot encoding)
+                expected = [0 for i in range(self.num_outputs)]
+                expected[row[-1]] = 1
+                sum_error += sum([(expected[i]-outputs[i])**2 for i in range(len(expected))])
+                self.backpropagate_error(expected)
+                self.update_weights(row)
+            print(">epoch " + str(epoch) + ": error={err:.4f}".format(err=sum_error))
                 
 
 class Neuron:
@@ -82,3 +112,8 @@ class Neuron:
 
     def set_error(self,err:float):
         self.error = err * self.transfer_derivative()
+
+    def update_weights(self, inputs:List[float], learning_rate:float):
+        inputs.append(1.0) # account for bias in non-output layers
+        for w in range(len(self.weights)):
+            self.weights[w] += learning_rate * self.error * inputs[w]
