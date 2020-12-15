@@ -76,6 +76,19 @@ class NeuralNetwork:
                 self.update_weights(row)
             print(">epoch " + str(epoch) + ": error={err:.4f}".format(err=sum_error))
                 
+    def predict(self, row:List[float]) -> int:
+        # make a prediction using the trained network
+        outputs = self.forward_propagate(row)
+        # undo the one-hot encoding to get back a catagorical prediction
+        prediction = outputs.index(max(outputs))
+        print("Predicting " + str(prediction) + ", Actual is " + str(row[-1]))
+        return prediction
+
+    def predict_list(self, rows:List[List[float]]) -> List[int]:
+        predictions = []
+        for row in rows:
+            predictions.append(self.predict(row))
+        return predictions
 
 class Neuron:
     # each node has n_in+1 (initially random) weights,
