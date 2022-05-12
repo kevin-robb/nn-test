@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <math.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -65,14 +66,96 @@ class NeuralNetwork {
         return outputs;
     }
 
-    // iterate through network.
-        // for (int i=0; i<this->numLayers; ++i) { // choose a layer.
-        //     for (int j=0; j<sizeof(this->network[i])/sizeof(this->network[i][0]); ++j) { // choose a node.
-        //         // TODO
-        //     }
-        // }
+    // Update weights by propagating error backwards through network.
+    void backpropagateError(float *expected) {
+        float errors[sizeof(expected)/sizeof(expected[0])];
+        // iterate through network in reverse.
+        for (int i=this->numLayers-1; i>=0; --i) {
+            // handle error differently for output vs hidden layers.
+            if (i == this->numLayers-1) { // output layer.
+                for (int j=0; j<sizeof(this->network[i])/sizeof(this->network[i][0]); ++j) {
+                    // get the error for each node.
+                    errors[j] = expected[j] - this->network[i][j].output;
+                }
+            } else { // hidden layer.
+                for (int j=0; j<sizeof(this->network[i])/sizeof(this->network[i][0]); ++j) {
+                    float err = 0.0;
+                    // accumulate error for links to all nodes in layer after this.
+                    for (int k=0; k<sizeof(this->network[i+1])/sizeof(this->network[i+1][0]); ++k) {
+                        err += this->network[i+1][k].weights[j] * this->network[i+1][k].error;
+                    }
+                    // set error for this node.
+                    errors[j] = err;
+                }
+            }
+            // set the error attribute on all nodes in this layer.
+            for (int j=0; j<sizeof(this->network[i])/sizeof(this->network[i][0]); ++j) {
+                this->network[i][j].setError(errors[j]);
+            }
+        }
+    }
 
-    // TODO all the NN functions.
+    // Given a row of inputs, update weights of all nodes in the NN.
+    void updateWeights(float *row) {
+        // we use online learning, updating after every training example.
+        float *inputs = new float[sizeof(row)/sizeof(row[0])-1];
+        for (int i=0; i<this->numLayers; ++i) {
+            if (i == 0) { // first layer.
+                // row contains data + true label, so remove the label.
+                for (int r=0; r<sizeof(row)/sizeof(row[0]); ++r) {
+                    inputs[r] = row[r];
+                }
+            } else {
+                // reinitialize inputs array to potentially different length.
+                delete[] inputs;
+                inputs = new float[sizeof(this->network[i-1])/sizeof(this->network[i-1][0])];
+                // inputs are the outputs from prev layer.
+                for (int j=0; j<sizeof(this->network[i-1])/sizeof(this->network[i-1][0]); ++j) {
+                    inputs[j] = this->network[i-1][j].output;
+                }
+            }
+            // have each node update its weights.
+            for (int j=0; j<sizeof(this->network[i])/sizeof(this->network[i][0]); ++j) {
+                this->network[i][j].updateWeights(inputs, this->learningRate);
+            }
+        }
+    }
+
+    // Train the network for a given number of epochs.
+    void train(float **trainingData, int numEpochs) {
+        for (int epoch=0; epoch<numEpochs; ++epoch) {
+            float sumError = 0;
+            for (int row=0; row<sizeof(trainingData)/sizeof(trainingData[0]); ++row) {
+                // get our model's predictions.
+                float *outputs = this->forwardPropagate(trainingData[row]);
+                // get the true labels (using one-hot encoding).
+                float expected[this->numOutputs] = {0}; // init all 0.
+                expected[(int) trainingData[row][sizeof(trainingData[row])/sizeof(trainingData[row][0])-0]] = 1; // correct spot is set to 1.
+                // add up errors.
+                for (int j=0; j<this->numOutputs; ++j) {
+                    sumError += (expected[j] - outputs[j]) * (expected[j] - outputs[j]);
+                }
+                // update the network based on the error.
+                this->backpropagateError(expected);
+                this->updateWeights(trainingData[row]);
+                // print some details to console.
+                cout << fixed << setprecision(4);
+                cout << "\n>epoch " << epoch << ": error=" << sumError;
+            }
+        }
+    }
+
+    // Make a predicton using the trained network.
+    int predict(float *row) {
+        float *outputs = this->forwardPropagate(row);
+        // undo the one-hot encoding to get back a categorical prediction.
+        int prediction = distance(outputs, max_element(outputs, outputs + this->numOutputs));
+        // print to console.
+        cout << "\nPredicting " << prediction << ", Actual is " << row[sizeof(row)/sizeof(row[0])];
+        return prediction;
+    }
+
+    // TODO predict_list function
 };
 
 class Neuron {
