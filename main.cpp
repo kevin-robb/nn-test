@@ -2,42 +2,44 @@
 
 using namespace std;
 
-
-// Obtain the output of the network for a particular input.
-float* forwardPropagate(float *inputs) {
-    static float outputs[sizeof(inputs)/sizeof(inputs[0])];
-    float *nextInputs = inputs;
-    // iterate through network.
-    for (int i=0; i<2; ++i) { // choose a layer.
-        for (int j=0; j<10; ++j) { // choose a node.
-            // store each node's output.
-            outputs[j] = nextInputs[j] * 2;
-        }
-        // this output is the input for the next layer.
-        nextInputs = outputs;
-    }
-    return outputs;
-}
+#include "neuralNetwork.h"
 
 int main() {
-    // test
-    float inputs[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    float *outputs = forwardPropagate(inputs);
-    cout << "inputs: ";
-    for (int i=0; i<10; ++i) {
-        cout << inputs[i] << ",";
-    }
-    cout << "\noutputs: ";
-    for (int i=0; i<10; ++i) {
-        cout << outputs[i] << ",";
-    }
-
-
-
     // hyperparams.
     float learningRate = 0.3;
     int numHiddenNodes = 5; //size of single hidden layer.
     int numEpochs = 500;
     float testRatio = 0.2; //proportion of data to use for testing.
+    // fake training data for testing.
+    float dataset[10][3] = {{2.7810836,2.550537003,0},
+                            {1.465489372,2.362125076,0},
+                            {3.396561688,4.400293529,0},
+                            {1.38807019,1.850220317,0},
+                            {3.06407232,3.005305973,0},
+                            {7.627531214,2.759262235,1},
+                            {5.332441248,2.088626775,1},
+                            {6.922596716,1.77106367,1},
+                            {8.675418651,-0.242068655,1},
+                            {7.673756466,3.508563011,1}};
+    // params that get set automatically from data. TODO
+    // int testInd = 7;
+    float trainingData[7][3] = {{2.7810836,2.550537003,0},
+                                {1.465489372,2.362125076,0},
+                                {3.396561688,4.400293529,0},
+                                {1.38807019,1.850220317,0},
+                                {3.06407232,3.005305973,0},
+                                {7.627531214,2.759262235,1},
+                                {5.332441248,2.088626775,1}};
+    float testingData[3][3] = {{6.922596716,1.77106367,1},
+                               {8.675418651,-0.242068655,1},
+                               {7.673756466,3.508563011,1}};
+    int numInputs = 2;
+    int numOutputs = 2;
+    // init the NN.
+    NeuralNetwork net (learningRate, numInputs, numHiddenNodes, numOutputs);
+    net.train(trainingData, numEpochs);
+    net.print();
+    int *predictions = net.predictList(testingData);
+    // TODO check accuracy.
     return 0;
 }

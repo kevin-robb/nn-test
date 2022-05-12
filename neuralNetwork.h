@@ -3,25 +3,8 @@
 #include <iomanip>
 #include <math.h>
 #include <algorithm>
-using namespace std;
+// using namespace std;
 #pragma once
-
-class NeuralNetwork {
-    public:
-    float learningRate;
-    int numOutputs;
-    Neuron **network;
-    int numLayers;
-
-    NeuralNetwork(float learningRate, int numInputs, int numHidden, int numOutputs);
-    void print();
-    float* forwardPropagate(float *inputs);
-    void backpropagateError(float *expected);
-    void updateWeights(float *row);
-    void train(float **trainingData, int numEpochs);
-    int predict(float *row);
-    int* predictList(float **rows);
-};
 
 class Neuron {
     public:
@@ -38,4 +21,21 @@ class Neuron {
     float transferDerivative();
     void setError(float error);
     void updateWeights(float *inputs, float learningRate);
+};
+
+class NeuralNetwork {
+    public:
+    float learningRate;
+    int numOutputs;
+    Neuron **network;
+    int numLayers;
+
+    NeuralNetwork(float learningRate, int numInputs, int numHidden, int numOutputs);
+    void print();
+    float* forwardPropagate(float *inputs);
+    void backpropagateError(float *expected);
+    void updateWeights(float *row);
+    void train(float trainingData[][3], int numEpochs);
+    int predict(float *row);
+    int* predictList(float rows[][3]);
 };
