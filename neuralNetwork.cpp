@@ -4,6 +4,8 @@
 #include <math.h>
 #include <algorithm>
 
+#include "neuralNetwork.h"
+
 using namespace std;
 
 class NeuralNetwork {
@@ -155,7 +157,14 @@ class NeuralNetwork {
         return prediction;
     }
 
-    // TODO predict_list function
+    // Make several predictions from a list of rows.
+    int* predictList(float **rows) {
+        static int predictions[sizeof(rows)/sizeof(rows[0])];
+        for (int r=0; r<sizeof(rows)/sizeof(rows[0]); ++r) {
+            predictions[r] = this->predict(rows[r]);
+        }
+        return predictions;
+    }
 };
 
 class Neuron {
