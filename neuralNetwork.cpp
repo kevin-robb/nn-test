@@ -120,7 +120,7 @@ void NeuralNetwork::updateWeights(float *row) {
 void NeuralNetwork::train(float trainingData[][3], int numEpochs) {
     for (int epoch=0; epoch<numEpochs; ++epoch) {
         float sumError = 0;
-        for (int row=0; row<sizeof(trainingData)/sizeof(trainingData[0]); ++row) {
+        for (int row=0; row<sizeof(*trainingData)/sizeof(*trainingData[0]); ++row) {
             // get our model's predictions.
             float *outputs = this->forwardPropagate(trainingData[row]);
             // get the true labels (using one-hot encoding).
@@ -152,8 +152,8 @@ int NeuralNetwork::predict(float *row) {
 
 // Make several predictions from a list of rows.
 int* NeuralNetwork::predictList(float rows[][3]) {
-    static int predictions[sizeof(rows)/sizeof(rows[0])];
-    for (int r=0; r<sizeof(rows)/sizeof(rows[0]); ++r) {
+    static int predictions[sizeof(*rows)/sizeof(*rows[0])];
+    for (int r=0; r<sizeof(*rows)/sizeof(*rows[0]); ++r) {
         predictions[r] = this->predict(rows[r]);
     }
     return predictions;
