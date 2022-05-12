@@ -6,12 +6,12 @@
 using namespace std;
 
 class NeuralNetwork {
-    // a Neural Network with one hidden layer.
+    // Neural Network with one hidden layer.
     public:
     float learningRate;
-    int numOutputs;
+    int numOutputs; // number of nodes in the output layer.
     Neuron **network;
-    int numLayers;
+    int numLayers; // number of layers, not including input layer.
 
     // Create the NeuralNetwork object and init structure.
     NeuralNetwork(float learningRate, int numInputs, int numHidden, int numOutputs) {
@@ -48,16 +48,21 @@ class NeuralNetwork {
         }
     }
 
-    void forwardPropagate(float *inputs) {
+    // Obtain the output of the network for a particular input.
+    float* forwardPropagate(float *inputs) {
+        static float outputs[sizeof(inputs)/sizeof(inputs[0])];
+        float *nextInputs = inputs;
         // iterate through network.
-        float outputs[sizeof(inputs)/sizeof(inputs[0])];
         for (int i=0; i<this->numLayers; ++i) { // choose a layer.
             for (int j=0; j<sizeof(this->network[i])/sizeof(this->network[i][0]); ++j) { // choose a node.
-                this->network[i][j].transfer(inputs);
-                // this output is the input for the next layer.
+                this->network[i][j].transfer(nextInputs);
+                // store each node's output.
                 outputs[j] = this->network[i][j].output;
-            } // TODO unfinished, compare to forward_propagate in python version.
+            }
+            // this output is the input for the next layer.
+            nextInputs = outputs;
         }
+        return outputs;
     }
 
     // iterate through network.
