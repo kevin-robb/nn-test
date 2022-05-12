@@ -15,26 +15,25 @@ NeuralNetwork::NeuralNetwork(float learningRate, int numInputs, int numHidden, i
     this->learningRate = learningRate;
     this->numOutputs = numOutputs;
     this->numLayers = 2;
+    // init network.
+    this->network = new Neuron *[2];
     // create hidden layer nodes.
-    Neuron hiddenLayer[numHidden];
+    this->network[0] = new Neuron[numHidden];
     for (int i=0; i<numHidden; ++i) {
         // each neuron will store links to all nodes in prev layer.
-        hiddenLayer[i] = Neuron(numInputs);
+        this->network[0][i] = Neuron(numInputs);
     }
     // create output layer nodes.
-    Neuron outputLayer[numOutputs];
+    this->network[1] = new Neuron[numOutputs];
     for (int i=0; i<numOutputs; ++i) {
         // each neuron will store links to all nodes in prev layer.
-        hiddenLayer[i] = Neuron(numHidden);
+        this->network[1][i] = Neuron(numHidden);
     }
-    // add the layers to the network.
-    this->network[0] = hiddenLayer;
-    this->network[1] = outputLayer;
 }
 
 // Print NN to console.
 void NeuralNetwork::print() {
-    cout << "--";
+    cout << "-- Network:";
     // iterate through network.
     for (int i=0; i<this->numLayers; ++i) { // choose a layer.
         for (int j=0; j<sizeof(this->network[i])/sizeof(this->network[i][0]); ++j) { // choose a node.
@@ -118,25 +117,35 @@ void NeuralNetwork::updateWeights(float *row) {
 
 // Train the network for a given number of epochs.
 void NeuralNetwork::train(float trainingData[][3], int numEpochs) {
+    // cout << "\ntrainingData:" << endl;
+    // for (int row=0; row<sizeof(*trainingData)/sizeof(*trainingData[0])*3-2; ++row) {
+    //     cout << trainingData[row][0] << "," << trainingData[row][1] << "," << trainingData[row][2] << endl;
+    // }
+    // cout << "end of trainingData" << endl;
+    // return;
+
     for (int epoch=0; epoch<numEpochs; ++epoch) {
         float sumError = 0;
-        for (int row=0; row<sizeof(*trainingData)/sizeof(*trainingData[0]); ++row) {
+        for (int row=0; row<sizeof(*trainingData)/sizeof(*trainingData[0])*3-2; ++row) {
             // get our model's predictions.
             float *outputs = this->forwardPropagate(trainingData[row]);
             // get the true labels (using one-hot encoding).
             float expected[this->numOutputs] = {0}; // init all 0.
-            expected[(int) trainingData[row][sizeof(trainingData[row])/sizeof(trainingData[row][0])-0]] = 1; // correct spot is set to 1.
+            // expected[(int) trainingData[row][sizeof(trainingData[row])/sizeof(trainingData[row][0])-1]] = 1; // correct spot is set to 1.
+            expected[(int) trainingData[row][2]] = 1; // correct spot is set to 1.
             // add up errors.
+            cout << "\nexpected/output: ";
             for (int j=0; j<this->numOutputs; ++j) {
+                cout << expected[j] << "/" << outputs[j] << ", ";
                 sumError += (expected[j] - outputs[j]) * (expected[j] - outputs[j]);
             }
             // update the network based on the error.
             this->backpropagateError(expected);
             this->updateWeights(trainingData[row]);
-            // print some details to console.
-            cout << fixed << setprecision(4);
-            cout << "\n>epoch " << epoch << ": error=" << sumError;
         }
+        // print some details to console.
+        cout << fixed << setprecision(4);
+        cout << "\n>epoch " << epoch << ": error=" << sumError;
     }
 }
 
@@ -170,11 +179,10 @@ Neuron::Neuron(int numNodesInPrevLayer){
     this->error = 0;
     // create list of weights at random in range (0,1).
     this->lenWeights = numNodesInPrevLayer + 1;
-    float weights[this->lenWeights];
+    this->weights = new float [this->lenWeights];
     for (int i=0; i<this->lenWeights; ++i) {
         weights[i] = (float) rand() / RAND_MAX;
     }
-    this->weights = weights;
 }
 
 // Print Node details to console.

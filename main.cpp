@@ -43,3 +43,11 @@ int main() {
     // TODO check accuracy.
     return 0;
 }
+
+// Steps to compile:
+// g++ *.cpp -o output
+// OR
+// g++ -c neuralNetwork.cpp
+// g++ -c main.cpp
+// g++ neuralNetwork.o main.o
+// ./a.out
