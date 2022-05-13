@@ -17,7 +17,6 @@ NeuralNetwork::NeuralNetwork(float learningRate, int numInputs, int numHidden, i
     // assign global vals for the NN.
     this->learningRate = learningRate;
     this->numLayers = 2;
-    // this->layerSizes = new int[2] {numHidden, numOutputs};
     this->layerSizes[0] = numHidden; this->layerSizes[1] = numOutputs;;
     // init network.
     this->network = new Neuron *[2];
@@ -49,55 +48,16 @@ void NeuralNetwork::print() {
 
 // Obtain the output of the network for a particular input.
 float* NeuralNetwork::forwardPropagate(float *inputs, float *outputs) {
-    // cout << inputs[0] << "," << inputs[1] << flush;
-    outputs[0] = 0.1;
-    outputs[1] = 0.9;
-    return outputs;
-    // return;
-    // DEBUG print out inputs
-    // cout << "\nforwardPropagate called with inputs: ";
-    // for (int i=0; i<sizeof(inputs)/sizeof(inputs[0]); ++i) {
-    //     cout << inputs[i] << ",";
-    // }
-
-    // float *outputs;
-    float *nextInputs = inputs;
-    // memcpy(nextInputs, inputs, *inputs * sizeof(inputs)/sizeof(inputs[0]));
-    cout << "????";
-    int l = this->numLayers;
-    cout << "ugh";
-    cout << l;
-    // cout << "\n" << l << " ";
     // iterate through network.
     for (int i=0; i<this->numLayers; ++i) { // choose a layer.
-        // create necessary number of outputs for this layer.
-        cout << this->layerSizes[i] << " ";
-        // float outputs[this->layerSizes[i]];
-
-        // // DEBUG print out inputs
-        // cout << "\nnextInputs: ";
-        // for (int i=0; i<sizeof(nextInputs)/sizeof(nextInputs[0]); ++i) {
-        //     cout << nextInputs[i] << ",";
-        // }
-
-        // cout << "\noutputs: ";
-        // float *nextInputs = inputs;
-        cout << "test";
         for (int j=0; j<this->layerSizes[i]; ++j) { // choose a node.
-            cout << "iter";
-            this->network[i][j].transfer(nextInputs);
+            this->network[i][j].transfer(inputs);
             // store each node's output.
             outputs[j] = this->network[i][j].output;
-            cout << outputs[j] << ",";
         }
         // this output is the input for the next layer.
-        delete[] nextInputs;
-        // nextInputs = new float[this->layerSizes[i]];
-        nextInputs = outputs;
-        // memcpy(nextInputs, outputs, *outputs * this->layerSizes[i]);
+        inputs = outputs;
     }
-    // store the outputs in a global var to access them later.
-    // this->outputs = outputs;
     return outputs;
 }
 
@@ -239,7 +199,6 @@ void Neuron::print() {
 
 float Neuron::activate(float *inputs) {
     // length of weights = length of inputs + 1.
-    // int lenWeights = sizeof(this->weights)/sizeof(this->weights[0]);
     float activation = this->weights[this->lenWeights-1]; // the bias.
     for (int i=0; i<this->lenWeights-1; ++i) {
         // compute weighted sum of inputs.

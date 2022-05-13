@@ -28,8 +28,7 @@ class NeuralNetwork {
     float learningRate;
     Neuron **network;
     int numLayers; // number of layers in the network.
-    int layerSizes[2]; // number of nodes in each layer.
-    // float *outputs; // result of forward propagation.
+    int *layerSizes; // array for number of nodes in each layer. (not incl input layer)
 
     NeuralNetwork(float learningRate, int numInputs, int numHidden, int numOutputs);
     void print();
