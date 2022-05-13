@@ -4,6 +4,8 @@
 #include <math.h>
 #include <algorithm>
 // #include <cstring>
+#include <chrono>
+#include <thread>
 
 #include "neuralNetwork.h"
 
@@ -46,13 +48,17 @@ void NeuralNetwork::print() {
 }
 
 // Obtain the output of the network for a particular input.
-void NeuralNetwork::forwardPropagate(float *inputs) {
-    cout << "DEBUG2";
+float* NeuralNetwork::forwardPropagate(float *inputs, float *outputs) {
+    // cout << inputs[0] << "," << inputs[1] << flush;
+    outputs[0] = 0.1;
+    outputs[1] = 0.9;
+    return outputs;
+    // return;
     // DEBUG print out inputs
-    cout << "\nforwardPropagate called with inputs: ";
-    for (int i=0; i<sizeof(inputs)/sizeof(inputs[0]); ++i) {
-        cout << inputs[i] << ",";
-    }
+    // cout << "\nforwardPropagate called with inputs: ";
+    // for (int i=0; i<sizeof(inputs)/sizeof(inputs[0]); ++i) {
+    //     cout << inputs[i] << ",";
+    // }
 
     // float *outputs;
     float *nextInputs = inputs;
@@ -66,7 +72,8 @@ void NeuralNetwork::forwardPropagate(float *inputs) {
     for (int i=0; i<this->numLayers; ++i) { // choose a layer.
         // create necessary number of outputs for this layer.
         cout << this->layerSizes[i] << " ";
-        float outputs[this->layerSizes[i]];
+        // float outputs[this->layerSizes[i]];
+
         // // DEBUG print out inputs
         // cout << "\nnextInputs: ";
         // for (int i=0; i<sizeof(nextInputs)/sizeof(nextInputs[0]); ++i) {
@@ -90,12 +97,13 @@ void NeuralNetwork::forwardPropagate(float *inputs) {
         // memcpy(nextInputs, outputs, *outputs * this->layerSizes[i]);
     }
     // store the outputs in a global var to access them later.
-    this->outputs = outputs;
+    // this->outputs = outputs;
+    return outputs;
 }
 
 // Update weights by propagating error backwards through network.
 void NeuralNetwork::backpropagateError(float *expected) {
-    float errors[sizeof(expected)/sizeof(expected[0])];
+    float errors[this->layerSizes[this->numLayers-1]];
     // iterate through network in reverse.
     for (int i=this->numLayers-1; i>=0; --i) {
         // handle error differently for output vs hidden layers.
@@ -150,20 +158,23 @@ void NeuralNetwork::updateWeights(float *row) {
 
 // Train the network for a given number of epochs.
 void NeuralNetwork::train(float trainingData[][3], int numEpochs) {
+    // int numTrainingRows = sizeof(*trainingData)/sizeof(*trainingData[0])*3-2;
+    int numTrainingRows = 7;
     for (int epoch=0; epoch<numEpochs; ++epoch) {
         float sumError = 0;
-        for (int row=0; row<sizeof(*trainingData)/sizeof(*trainingData[0])*3-2; ++row) {
+        for (int row=0; row<numTrainingRows; ++row) {
             // get our model's predictions.
-            cout << "DEBUG";
-            this->forwardPropagate(trainingData[row]);
+            // define outputs big enough that there won't be a problem for any layer. fill with zeros.
+            float outputs_temp[*max_element(this->layerSizes , this->layerSizes + this->numLayers)] = {};
+            float *outputs = this->forwardPropagate(trainingData[row], outputs_temp);
             // get the true labels (using one-hot encoding).
-            float expected[this->layerSizes[this->numLayers-1]] = {0}; // init all 0.
+            float expected[this->layerSizes[this->numLayers-1]] = {}; // init all 0.
             expected[(int) trainingData[row][2]] = 1; // correct spot is set to 1.
             // add up errors.
-            cout << "\nexpected/output: ";
+            cout << "\nexpected/output: " << flush;
             for (int j=0; j<this->layerSizes[this->numLayers-1]; ++j) {
-                cout << expected[j] << "/" << this->outputs[j] << ", ";
-                sumError += (expected[j] - this->outputs[j]) * (expected[j] - this->outputs[j]);
+                cout << expected[j] << "/" << outputs[j] << ", " << flush;
+                sumError += (expected[j] - outputs[j]) * (expected[j] - outputs[j]);
             }
             // update the network based on the error.
             this->backpropagateError(expected);
@@ -177,9 +188,11 @@ void NeuralNetwork::train(float trainingData[][3], int numEpochs) {
 
 // Make a predicton using the trained network.
 int NeuralNetwork::predict(float *row) {
-    this->forwardPropagate(row);
+    // define outputs big enough that there won't be a problem for any layer.
+    float outputs_temp[*max_element(this->layerSizes , this->layerSizes + this->numLayers)];
+    float *outputs = this->forwardPropagate(row, outputs_temp);
     // undo the one-hot encoding to get back a categorical prediction.
-    int prediction = distance(this->outputs, max_element(this->outputs, this->outputs + this->layerSizes[this->numLayers-1]));
+    int prediction = distance(outputs, max_element(outputs, outputs + this->layerSizes[this->numLayers-1]));
     // print to console.
     cout << "\nPredicting " << prediction << ", Actual is " << (int) row[sizeof(row)/sizeof(row[0])];
     return prediction;
@@ -191,6 +204,7 @@ int* NeuralNetwork::predictList(float rows[][3]) {
     for (int r=0; r<sizeof(*rows)/sizeof(*rows[0]); ++r) {
         predictions[r] = this->predict(rows[r]);
     }
+    cout << endl;
     return predictions;
 }
 

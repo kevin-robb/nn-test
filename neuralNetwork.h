@@ -29,11 +29,11 @@ class NeuralNetwork {
     Neuron **network;
     int numLayers; // number of layers in the network.
     int layerSizes[2]; // number of nodes in each layer.
-    float *outputs; // result of forward propagation.
+    // float *outputs; // result of forward propagation.
 
     NeuralNetwork(float learningRate, int numInputs, int numHidden, int numOutputs);
     void print();
-    void forwardPropagate(float *inputs);
+    float* forwardPropagate(float *inputs, float *outputs);
     void backpropagateError(float *expected);
     void updateWeights(float *row);
     void train(float trainingData[][3], int numEpochs);
